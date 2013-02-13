@@ -9,6 +9,11 @@ public class Friend {
 	
 	private String friendCount;
 	
+	private Location location;
+	
+	private Double distanceFromMe;
+	
+	
 	public String getName() {
 		return name;
 	}
@@ -20,5 +25,18 @@ public class Friend {
 	}
 	public void setFriendCount(String friendCount) {
 		this.friendCount = friendCount;
+	}
+	
+	public Double getDistanceFromMe() {
+		return distanceFromMe;
+	}
+	public void setDistanceFromMe(Double distanceFromMe) {
+		this.distanceFromMe = distanceFromMe;
+	}
+	public Location getLocation() {
+		return location;
+	}
+	public void setLocation(Location location) {
+		this.location = location;
 	}
 }
