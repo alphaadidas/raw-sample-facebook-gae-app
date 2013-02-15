@@ -8,6 +8,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.sample.facebook.simple.model.Friend;
+import com.sample.facebook.simple.model.NamePairScore;
+
 
 @SuppressWarnings("serial")
 public class SimpleFacebookSampleServlet extends HttpServlet {
@@ -37,6 +40,7 @@ public class SimpleFacebookSampleServlet extends HttpServlet {
 			resp.getWriter().println("incoming state :" + incomingState +"<br/>");
 			resp.getWriter().println("session state :" + state +"<br/>");
 
+			
 			//check for NPE ...
 			if(state.trim().equals(incomingState.trim())){
 
@@ -50,6 +54,9 @@ public class SimpleFacebookSampleServlet extends HttpServlet {
 						session.putValue("access_token", accessToken);
 					}
 
+					/**
+					 * TOP 10 Friends by friend count
+					 */
 					List<Friend> friends = friendManager.getTop10Friends(accessToken);
 
 					resp.getWriter().println("<p>Top 10 Friends</p>");
@@ -65,6 +72,9 @@ public class SimpleFacebookSampleServlet extends HttpServlet {
 
 					friends = friendManager.getAllFriendLocation(accessToken);
 					
+					/**
+					 * Closest Friends
+					 */
 					List<Friend> closetFriends = friendManager.getToFriendsByDistance(friends, 1);
 					
 					resp.getWriter().println("<p>Top 10 Closest Friends, that we know location</p>");
@@ -76,6 +86,9 @@ public class SimpleFacebookSampleServlet extends HttpServlet {
 					}
 					resp.getWriter().println("</ul>");
 
+					/**
+					 *  Farthest Friends
+					 */
 					List<Friend> farthestFriends = friendManager.getToFriendsByDistance(friends, -1);
 					
 					resp.getWriter().println("<p>Top 10 Farthest Friends, that we know location</p>");
@@ -87,6 +100,21 @@ public class SimpleFacebookSampleServlet extends HttpServlet {
 					}
 					resp.getWriter().println("</ul>");
 
+					/**
+					 * Friends' character overlap count
+					 * 
+					 */
+					List<NamePairScore> overlapPairs = friendManager.commonCharacterFriends(friends);
+					
+					resp.getWriter().println("<p>Top 10 common character pairs of friends' names</p>");
+					resp.getWriter().println("<ul>");
+					if(farthestFriends !=null){
+						for(NamePairScore pair:overlapPairs){
+							resp.getWriter().println("<li>"+pair.getFirst()+" | "+pair.getSecond()+"  = "+ pair.getOverlapCount() +"</li>");
+						}
+					}
+					resp.getWriter().println("</ul>");
+					
 					
 				} catch (Exception e) {
 					resp.getWriter().println("BOOM");

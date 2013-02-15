@@ -1,4 +1,4 @@
-package com.sample.facebook.simple;
+package com.sample.facebook.simple.model;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -13,6 +13,10 @@ public class Friend {
 	
 	private Double distanceFromMe;
 	
+	public Friend(){}
+	public Friend(String name){
+		this.name = name;
+	}
 	
 	public String getName() {
 		return name;

@@ -51,7 +51,7 @@ public class FacebookManager {
 		
 		String response = httpClient.httpRequest("https",
 									"graph.facebook.com",
-									"/oauth/access_t oken",
+									"/oauth/access_token", 
 									requestParams);
 
 		//Should look like this:

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.TreeMap;
 
 
@@ -15,6 +16,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.sample.facebook.simple.model.Friend;
+import com.sample.facebook.simple.model.Location;
+import com.sample.facebook.simple.model.LocationDetail;
+import com.sample.facebook.simple.model.NamePairScore;
+import com.sample.facebook.simple.model.NameScore;
 
 public class FriendManager {
 
@@ -44,36 +50,61 @@ public class FriendManager {
 		return friends;
 	}
 
-	public List<Friend> commonCharacterFriends(List<Friend> all){
+	/**
+	 * Calculate the number of characters in common amongst the names.
+	 * Returns a list of name-pairs, sorted by the common count (descending)
+	 * 
+	 * 
+	 * Use bitmasking on integers to calculate the overlap between two strings.
+	 * (  aba  =>  11000000 ..  , cdb => 0111000000 ... )
+	 * 
+	 * @param names
+	 * @return
+	 */
+	public List<NamePairScore> commonCharacterFriends(List<Friend> names){
 
-		//iterate over list .. keep tally of global character count, and friend name count.
-
-		Map<Character,CharacterCount> characterCount  = new TreeMap<Character, CharacterCount>();
-
-		for(Friend friend : all){
-			for(int i=0; i< friend.getName().length(); i++){				
-				String name = friend.getName().toLowerCase();				
-				Character ch = name.charAt(i);
-
-				if(characterCount.containsKey(ch)){
-					CharacterCount cc = characterCount.get(ch);
-					cc.incrementCount();
-				}else{
-					characterCount.put(ch, new CharacterCount(ch));
-				}				
+		List<NameScore> nameScores = new ArrayList<NameScore>();
+		
+		for(Friend name : names){
+			NameScore score = new NameScore();
+			score.setName(name.getName());
+			score.setMask(calculateStringBitmask(name.getName().toLowerCase()));
+			nameScores.add(score);
+		}
+				
+		List<NamePairScore> pairs = new ArrayList<NamePairScore>();
+		
+		for(int i=0 ; i<nameScores.size(); i++){
+			
+			for(int j=0; j<i; j++){
+				if(j==i) {continue;}
+				
+				NamePairScore pair = new NamePairScore();
+				pair.setFirst(nameScores.get(i).getName());
+				pair.setSecond(nameScores.get(j).getName());
+				pair.setOverlapCount( countMaskOverlap(nameScores.get(i).getMask(),nameScores.get(j).getMask()));
+				pairs.add(pair);
+				
 			}			
 		}
+		
+		//reverse sort
+		Collections.sort(pairs,new Comparator<NamePairScore>() {
 
-		List<CharacterCount> chars = new ArrayList<CharacterCount>(characterCount.values());
-		Collections.sort(chars, new Comparator<CharacterCount>() {
 			@Override
-			public int compare(CharacterCount o1, CharacterCount o2) {				
-				return o1.getCount().compareTo(o2.getCount());
+			public int compare(NamePairScore o1, NamePairScore o2) {
+				
+				if ( o1.getOverlapCount() == o2.getOverlapCount()){
+					return 0;
+				}else if(o1.getOverlapCount() > o2.getOverlapCount()){
+					return -1;
+				}else{
+					return 1;
+				}
 			}
 		});
-
-
-		return null;
+		
+		return pairs;
 	}
 
 	public List<Friend> getAllFriends(String accessToken) throws Exception {
@@ -120,12 +151,14 @@ public class FriendManager {
 		
 		Map<String,String> requestParams = new TreeMap<String, String>();
 
+		//wish subfields for supported in 'location'
 		requestParams.put("fields", "location,friends.fields(location,name)");
 		requestParams.put("access_token", accessToken);
 
 		String listJson = httpClient.httpRequest("https",
 				"graph.facebook.com",
 				"/me",requestParams);
+		
 		
 		List<Friend> friends = parseGraphApiFriendList(listJson,accessToken);
 
@@ -278,5 +311,36 @@ public class FriendManager {
 	
 	
 	
+	
+	protected int calculateStringBitmask(String input){
+		
+		int valueMask = 0;
+		for(char ch : input.toCharArray()){
+			int idx = maskIdx(ch);
+			if(idx >=0 && idx <=25){
+				valueMask = valueMask | (1 << idx);
+			}
+		}
+				
+		return valueMask;
+	}
+
+	protected int maskIdx(char ch){
+		return ch - 'a';		
+	}
+	
+	protected int countMaskOverlap(int left, int right){
+
+		int cross = left & right;
+
+		int count = 0;
+		while(cross >0)
+		{
+			count += cross & 1;
+			cross >>= 1;
+		}
+
+		return count;
+	}
 
 }

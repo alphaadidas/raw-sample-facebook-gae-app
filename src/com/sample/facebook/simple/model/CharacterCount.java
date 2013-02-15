@@ -1,4 +1,4 @@
-package com.sample.facebook.simple;
+package com.sample.facebook.simple.model;
 
 public class CharacterCount {
 
