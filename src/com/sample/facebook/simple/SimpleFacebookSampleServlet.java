@@ -33,6 +33,7 @@ public class SimpleFacebookSampleServlet extends HttpServlet {
 			facebookManager.loginRedirect(resp, session);
 
 		}else{
+			
 			//has code.. use it to load the list of friends
 			String incomingState = req.getParameter("state");
 			String state = (String)session.getValue("state");
